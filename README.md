@@ -1,22 +1,23 @@
-# WhatsApp Auto Sender
+# WA Sender
 
-## चलाने का तरीका
-1. Node.js 18+ install करें
+## Run locally
+1. Install Node.js 18+
 2. `npm install`
-3. `npm start`
-4. ब्राउज़र में http://localhost:3000 खोलें, पहली बार QR स्कैन करें (सेशन `session/` फ़ोल्डर में सेव रहता है)
-5. Excel अपलोड करें, मैसेज चेक करें, "भेजना शुरू करें" दबाएँ
+3. Copy `.env.example` to `.env` and edit it
+4. `npm start`, then open http://localhost:3000
+5. Click **Connect**, scan the QR code, upload your Excel file, write the message, click **Start sending**
 
-## Excel फ़ॉर्मेट
-| Business Name | Mobile Number | Rating |
-|---|---|---|
-| Doon Valley Holistic Wellness & Yoga | 9876543210 | 4.8 |
+## Excel format
+Columns: **Business Name**, **Mobile Number**, optional **Rating** (or any extra column; use it in the message as `{column_name}`). See `demo_contacts.xlsx`.
 
-## सेटिंग (environment variables)
-- `MIN_DELAY_SEC` / `MAX_DELAY_SEC`: मैसेज के बीच गैप (default 20-45 सेकंड)
-- `DEFAULT_COUNTRY_CODE`: 10 अंक वाले नंबर के आगे जुड़ेगा (default 91)
-- `PORT`: default 3000
+## Deploy on Render
+Docker runtime, Starter plan, Disk mounted at `/data`, env vars from `.env.example` (`SESSION_PATH=/data/session`).
+Set **Health Check Path** to `/health`.
 
-## सावधानी
-पहले अपने दो-तीन नंबरों पर टेस्ट करें। एक दिन में 30-50 से ज़्यादा नए नंबरों को न भेजें, वरना नंबर बैन हो सकता है।
-सर्वर पर चलाएँ तो पासवर्ड/लॉगिन ज़रूर लगाएँ, वरना कोई भी आपके WhatsApp से मैसेज भेज सकता है।
+## Health check & keep-alive
+- `GET /health` is public and returns `{"status":"ok", ...}`.
+- The server pings itself every 10 minutes when `PUBLIC_URL` / `RENDER_EXTERNAL_URL` is set.
+- For extra safety, add a free monitor (UptimeRobot or cron-job.org) that calls `/health` every 5 minutes.
+
+## Safety
+Test on your own numbers first. Do not message more than 30-50 new numbers per day to avoid a WhatsApp ban.

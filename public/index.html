@@ -1,74 +1,106 @@
 <!DOCTYPE html>
-<html lang="hi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhatsApp Auto Sender</title>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WA Sender</title>
 <style>
-  body{font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:16px;background:#f5f6f7;color:#111}
-  .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px #0002}
-  h1{font-size:20px} h2{font-size:16px;margin:0 0 10px}
-  textarea{width:100%;min-height:130px;padding:8px;font:inherit;box-sizing:border-box}
-  button{background:#16a34a;color:#fff;border:0;padding:10px 18px;border-radius:8px;font-size:15px;cursor:pointer}
-  button.stop{background:#dc2626} button:disabled{opacity:.5}
-  .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px}
-  .ok{background:#dcfce7;color:#166534}.wait{background:#fef9c3;color:#854d0e}.bad{background:#fee2e2;color:#991b1b}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  td,th{padding:6px;border-bottom:1px solid #eee;text-align:left}
-  .scroll{overflow-x:auto;max-height:340px;overflow-y:auto}
-  small{color:#666}
-</style>
-</head>
-<body>
-<h1>WhatsApp Auto Sender</h1>
-
-<div class="card" id="conn"><h2>1. WhatsApp कनेक्शन</h2><div id="connBody">लोड हो रहा है...</div></div>
+:root{--bg:#f3f6f4;--card:#fff;--tx:#0f1f17;--mut:#64748b;--bd:#e2e8f0;--g:#16a34a;--r:#dc2626;--y:#d97706}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1410;--card:#13211a;--tx:#e8f3ec;--mut:#8aa396;--bd:#223529}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--tx)}
+.wrap{max-width:820px;margin:0 auto;padding:0 14px}
+header{background:linear-gradient(135deg,#0f7a37,#16a34a);color:#fff;padding:14px 0}
+header .wrap{display:flex;justify-content:space-between;align-items:center}
+header b{font-size:18px}header button{background:#fff3;color:#fff;border:0;padding:8px 14px;border-radius:8px;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin:14px 0}
+h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.n{background:var(--g);color:#fff;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dot{width:12px;height:12px;border-radius:50%;background:#94a3b8}.dot.on{background:var(--g);box-shadow:0 0 0 4px #16a34a33}.dot.wait{background:var(--y)}.dot.off{background:var(--r)}
+button.b{background:var(--g);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+button.b.o{background:transparent;color:var(--tx);border:1px solid var(--bd)}button.b.d{background:var(--r)}button.b:disabled{opacity:.5;cursor:not-allowed}
+[hidden]{display:none!important}
+#qrbox{text-align:center;margin-top:14px}#qr{width:240px;max-width:100%;border-radius:12px;border:1px solid var(--bd);background:#fff}
+.mut{color:var(--mut);font-size:13px}#err,#msg{color:var(--r);font-size:14px;margin-top:8px}
+#drop{border:2px dashed var(--bd);border-radius:12px;padding:24px;text-align:center;cursor:pointer;color:var(--mut)}
+#drop.over,#drop.has{border-color:var(--g);background:#16a34a12;color:var(--tx)}
+textarea{width:100%;min-height:120px;padding:10px;border:1px solid var(--bd);border-radius:10px;font:inherit;background:transparent;color:inherit;margin-top:12px}
+.chip{background:#16a34a1f;color:var(--g);border:0;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;margin-right:6px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.tile{background:var(--bg);border-radius:10px;padding:10px;text-align:center}.tile b{display:block;font-size:20px}.tile span{font-size:12px;color:var(--mut)}
+.prog{height:8px;background:var(--bd);border-radius:99px;overflow:hidden;margin-bottom:12px}#bar{height:100%;width:0;background:var(--g);transition:width .4s}
+.scroll{overflow:auto;max-height:340px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 6px;border-bottom:1px solid var(--bd);text-align:left}
+.pill{padding:3px 10px;border-radius:99px;font-size:12px;white-space:nowrap}.sent{background:#dcfce7;color:#166534}.failed{background:#fee2e2;color:#991b1b}.pending{background:#fef3c7;color:#92400e}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:10px 0 30px}
+</style></head><body>
+<header><div class="wrap"><b>💬 WA Sender</b><button id="out">Sign out</button></div></header>
+<div class="wrap">
 
 <div class="card">
-  <h2>2. Excel + मैसेज</h2>
-  <input type="file" id="file" accept=".xlsx,.xls,.csv"><br><br>
+  <h2><span class="n">1</span>WhatsApp connection</h2>
+  <div class="row"><span class="dot" id="dot"></span><b id="st">Loading…</b></div>
+  <div class="row" style="margin-top:12px">
+    <button class="b" id="bc" hidden>Connect</button>
+    <button class="b o" id="bd" hidden>Disconnect</button>
+    <button class="b o" id="bu" hidden>Unlink device</button>
+  </div>
+  <div id="err"></div>
+  <div id="qrbox" hidden><img id="qr" alt="QR code"><p class="mut">Open WhatsApp → Settings → Linked devices → Link a device, then scan this code.</p></div>
+</div>
+
+<div class="card">
+  <h2><span class="n">2</span>Upload Excel &amp; write message</h2>
+  <div id="drop"><div style="font-size:28px">📄</div><div id="dn">Drop your Excel file here or tap to browse</div><div class="mut">.xlsx, .xls or .csv · columns: Business Name, Mobile Number</div></div>
+  <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
   <textarea id="tpl">Hello {business_name} team, I saw your business on Google and noticed your {rating} rating. I could not find a website for you. I build simple websites with WhatsApp booking and Google Maps for small businesses, ready in 2 days, starting at ₹3,000. Can I send you a quick sample?</textarea>
-  <small>Excel के कॉलम: <b>Business Name</b>, <b>Mobile Number</b>, और अगर मैसेज में {rating} है तो <b>Rating</b>। कोई भी कॉलम {column_name} लिखकर मैसेज में डाल सकते हैं।</small><br><br>
-  <button id="go">भेजना शुरू करें</button>
-  <button class="stop" id="stop">रोकें</button>
+  <div style="margin-top:8px"><span class="mut">Insert: </span><button class="chip" data-v="{business_name}">{business_name}</button><button class="chip" data-v="{rating}">{rating}</button><span class="mut">or any column name in braces</span></div>
+  <div class="row" style="margin-top:14px"><button class="b" id="go">Start sending</button><button class="b d" id="stop" hidden>Stop</button></div>
   <div id="msg"></div>
 </div>
 
 <div class="card">
-  <h2>3. स्टेटस <span id="counts"></span></h2>
+  <h2><span class="n">3</span>Progress</h2>
+  <div class="tiles"><div class="tile"><b id="t0">0</b><span>Total</span></div><div class="tile"><b id="t1">0</b><span>Sent</span></div><div class="tile"><b id="t2">0</b><span>Failed</span></div><div class="tile"><b id="t3">0</b><span>Pending</span></div></div>
+  <div class="prog"><div id="bar"></div></div>
   <div class="scroll"><table><thead><tr><th>Business</th><th>Number</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div style="margin-top:10px"><button class="b o" id="clr">Clear list</button></div>
 </div>
-
+<footer>Server healthy · uptime <span id="up">0m</span></footer>
+</div>
 <script>
-const $ = (id) => document.getElementById(id);
-async function poll(){
-  try{
-    const d = await (await fetch('/api/status')).json();
-    const w = d.wa;
-    if(w.status==='ready') $('connBody').innerHTML='<span class="badge ok">कनेक्टेड ✓</span>';
-    else if(w.status==='qr') $('connBody').innerHTML='WhatsApp &rarr; Linked Devices &rarr; Link a device से स्कैन करें:<br><img src="'+w.qr+'" width="240">';
-    else $('connBody').innerHTML='<span class="badge wait">'+w.status+'...</span>';
-    const c=d.counts;
-    $('counts').textContent=`(भेजे: ${c.sent} | फेल: ${c.failed} | बाकी: ${c.pending})`;
-    $('rows').innerHTML=d.rows.map(r=>{
-      const cls=r.status==='sent'?'ok':r.status==='failed'?'bad':'wait';
-      const t=r.status==='sent'?'भेजा गया':r.status==='failed'?('फेल: '+r.error):'इंतज़ार में';
-      return `<tr><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td><span class="badge ${cls}">${esc(t)}</span></td></tr>`;
-    }).join('');
-    $('go').disabled=d.running;
-  }catch(e){}
-}
+const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+async function api(u,o){const r=await fetch(u,o);if(r.status===401){location='/login';throw 0}return r.json()}
+const post=(u,b)=>api(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
+const L={stopped:['Not connected','off'],starting:['Starting WhatsApp…','wait'],qr:['Waiting for QR scan','wait'],authenticating:['Authenticating…','wait'],ready:['Connected','on']};
+let ready=false;
+async function poll(){try{
+  const d=await api('/api/status'),w=d.wa,k=d.counts,n=d.rows.length,l=L[w.status]||[w.status,'wait'];
+  ready=w.status==='ready';
+  $('dot').className='dot '+l[1];$('st').textContent=l[0]+(ready&&w.info?' · +'+w.info:'');$('err').textContent=w.error||'';
+  $('bc').hidden=w.status!=='stopped';$('bd').hidden=w.status==='stopped';$('bu').hidden=!ready;
+  $('qrbox').hidden=w.status!=='qr';if(w.qr)$('qr').src=w.qr;
+  $('t0').textContent=n;$('t1').textContent=k.sent;$('t2').textContent=k.failed;$('t3').textContent=k.pending;
+  $('bar').style.width=n?((k.sent+k.failed)/n*100)+'%':'0%';
+  $('go').disabled=d.running||!ready;$('stop').hidden=!d.running;
+  $('rows').innerHTML=d.rows.map(r=>{const t=r.status==='sent'?'Sent':r.status==='failed'?'Failed: '+r.error:'Pending';
+    return `<tr><td>${esc(r.name)}</td><td>${esc(r.phone)}</td><td><span class="pill ${r.status}">${esc(t)}</span></td></tr>`}).join('');
+  const m=Math.floor(d.uptime/60);$('up').textContent=m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m';
+}catch(e){}}
+$('bc').onclick=async()=>{await post('/api/connect');poll()};
+$('bd').onclick=async()=>{await post('/api/disconnect');poll()};
+$('bu').onclick=async()=>{if(confirm('Unlink this device from WhatsApp? You will need to scan the QR code again.')){await post('/api/disconnect',{unlink:true});poll()}};
+$('stop').onclick=()=>post('/api/stop');
+$('clr').onclick=async()=>{await post('/api/clear');poll()};
+$('out').onclick=async()=>{await post('/api/logout');location='/login'};
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const t=$('tpl'),s=t.selectionStart;t.setRangeText(c.dataset.v,s,t.selectionEnd,'end');t.focus()});
+const drop=$('drop'),fi=$('file');
+function pick(f){if(!f)return;const dt=new DataTransfer();dt.items.add(f);fi.files=dt.files;$('dn').textContent=f.name;drop.classList.add('has')}
+drop.onclick=()=>fi.click();fi.onchange=()=>pick(fi.files[0]);
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');pick(e.dataTransfer.files[0])};
 $('go').onclick=async()=>{
-  const f=$('file').files[0];
-  if(!f){$('msg').textContent='पहले Excel चुनिए';return;}
-  const fd=new FormData(); fd.append('file',f); fd.append('template',$('tpl').value);
-  const r=await fetch('/api/upload',{method:'POST',body:fd}); const j=await r.json();
-  $('msg').textContent=j.error?('⚠ '+j.error):('शुरू हो गया: '+j.total+' नंबर');
-  poll();
+  const f=fi.files[0];$('msg').textContent='';
+  if(!f){$('msg').textContent='Please choose an Excel file first.';return}
+  const fd=new FormData();fd.append('file',f);fd.append('template',$('tpl').value);
+  const r=await fetch('/api/start',{method:'POST',body:fd});if(r.status===401){location='/login';return}
+  const j=await r.json();$('msg').style.color=j.error?'':'var(--g)';$('msg').textContent=j.error||('Started: '+j.total+' contacts queued.');poll();
 };
-$('stop').onclick=()=>fetch('/api/stop',{method:'POST'});
-setInterval(poll,2000); poll();
-</script>
-</body>
-</html>
+setInterval(poll,2000);poll();
+</script></body></html>
